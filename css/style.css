@@ -335,6 +335,66 @@ main h2 {
 }
 .fns-footer a { color: var(--accent); }
 
+/* LIVE SCORE ROW */
+.score-row {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  background: linear-gradient(180deg, rgba(253, 181, 21, 0.08), rgba(253, 181, 21, 0.02));
+  border: 1px solid rgba(253, 181, 21, 0.2);
+  border-radius: 8px;
+  padding: .65rem .85rem;
+  margin: .5rem 0;
+}
+.score-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.team-short { color: var(--text); }
+.score {
+  font-size: 1.6rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  min-width: 2.5rem;
+  text-align: right;
+  letter-spacing: -0.02em;
+}
+.score.winning { color: var(--accent); }
+.game-progress {
+  text-align: center;
+  font-size: .78rem;
+  color: var(--muted);
+  margin-top: .3rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* STATUS BADGE STATES */
+.status-badge.status-live {
+  background: var(--accent-2);
+  color: #fff;
+  font-weight: 800;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.7; }
+}
+.status-badge.status-final {
+  background: #2a3245;
+  color: var(--text);
+  font-weight: 800;
+}
+.status-badge.status-ppd {
+  background: #444;
+  color: var(--muted);
+}
+
 /* MOBILE */
 @media (max-width: 600px) {
   .card-grid { grid-template-columns: 1fr; }

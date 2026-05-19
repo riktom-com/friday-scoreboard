@@ -562,13 +562,16 @@ function buildGameCard(game, opts = {}) {
   const radioBtn = home.radioUrl
     ? `<a class="action" href="${escHtml(home.radioUrl)}" target="_blank" rel="noopener">📻 ${escHtml(home.radioName)}</a>`
     : '';
-  const liveScoreUrl = home.scorestream;
+
+  // Build the game_id that matches the backend format
+  const gameId = `${away.id}-vs-${home.id}-${game.fridayDate}`;
 
   const card = document.createElement('div');
   card.className = 'game-card';
   card.style.borderTopColor = home.colors.primary || 'var(--accent)';
   card.dataset.homeId = home.id;
   card.dataset.awayId = away.id;
+  card.dataset.gameId = gameId;
 
   card.innerHTML = `
     <div class="matchup">
@@ -577,7 +580,18 @@ function buildGameCard(game, opts = {}) {
         <span class="at">@</span>
         ${escHtml(home.mascot)}<span class="helmet">${escHtml(home.helmet)}</span>
       </div>
-      <span class="status-badge">${escHtml(kickoffStr)}</span>
+      <span class="status-badge js-status-badge">${escHtml(kickoffStr)}</span>
+    </div>
+    <div class="score-row js-score-row" hidden>
+      <div class="score-line">
+        <span class="team-short">${escHtml(away.mascot)}</span>
+        <span class="score js-away-score">—</span>
+      </div>
+      <div class="score-line">
+        <span class="team-short">${escHtml(home.mascot)}</span>
+        <span class="score js-home-score">—</span>
+      </div>
+      <div class="game-progress js-game-progress"></div>
     </div>
     <div class="stadium">📍 ${escHtml(home.stadium)} · ${escHtml(home.city)}, GA</div>
     ${distanceHtml}
@@ -585,7 +599,6 @@ function buildGameCard(game, opts = {}) {
     <div class="actions">
       <a class="action" href="${escHtml(dirUrl)}" target="_blank" rel="noopener">📍 Directions</a>
       ${radioBtn}
-      <a class="action live-score" href="${escHtml(liveScoreUrl)}" target="_blank" rel="noopener">📊 Live Score ↗</a>
     </div>
   `;
 
@@ -640,6 +653,8 @@ function renderClosest() {
 function renderAll() {
   renderClosest();
   renderGameList();
+  // After re-rendering cards, re-apply latest scores so filter changes don't wipe live data
+  if (typeof fetchScores === 'function') fetchScores();
 }
 
 // ---- VIEW SWITCHING ----
@@ -755,11 +770,81 @@ function setupEvents() {
   }, 10 * 60 * 1000);
 }
 
+/* ═══════════════════════════════════════════════════
+   LIVE SCORES — poll backend /api/scores every 30s
+═══════════════════════════════════════════════════ */
+async function fetchScores() {
+  try {
+    const res = await fetch('/api/scores', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    applyScores(data.games || []);
+  } catch (err) {
+    // Silent failure — keep showing whatever was last rendered
+    console.warn('Score fetch failed:', err.message);
+  }
+}
+
+function applyScores(games) {
+  for (const g of games) {
+    const card = document.querySelector(`.game-card[data-game-id="${g.game_id}"]`);
+    if (!card) continue;
+
+    const statusBadge = card.querySelector('.js-status-badge');
+    const scoreRow    = card.querySelector('.js-score-row');
+    const awayScoreEl = card.querySelector('.js-away-score');
+    const homeScoreEl = card.querySelector('.js-home-score');
+    const progressEl  = card.querySelector('.js-game-progress');
+
+    // If there's no score data at all, leave the kickoff badge
+    if (g.away_score == null && g.home_score == null && g.status === 'pre') {
+      scoreRow.hidden = true;
+      continue;
+    }
+
+    scoreRow.hidden = false;
+    awayScoreEl.textContent = g.away_score != null ? g.away_score : '—';
+    homeScoreEl.textContent = g.home_score != null ? g.home_score : '—';
+
+    // Highlight whoever is winning
+    awayScoreEl.classList.toggle('winning', g.away_score != null && g.home_score != null && g.away_score > g.home_score);
+    homeScoreEl.classList.toggle('winning', g.away_score != null && g.home_score != null && g.home_score > g.away_score);
+
+    // Status badge + progress text
+    if (g.status === 'final') {
+      statusBadge.textContent = 'FINAL';
+      statusBadge.className = 'status-badge js-status-badge status-final';
+      progressEl.textContent = '';
+    } else if (g.status === 'in') {
+      const parts = [];
+      if (g.period) parts.push(g.period);
+      if (g.clock) parts.push(g.clock);
+      statusBadge.textContent = '🔴 LIVE';
+      statusBadge.className = 'status-badge js-status-badge status-live';
+      progressEl.textContent = parts.join(' · ');
+    } else if (g.status === 'postponed') {
+      statusBadge.textContent = 'PPD';
+      statusBadge.className = 'status-badge js-status-badge status-ppd';
+      progressEl.textContent = 'Postponed';
+    } else {
+      // pre but with scores set somehow — leave alone
+    }
+  }
+}
+
+let scoreTimer = null;
+function startScorePolling() {
+  fetchScores();
+  if (scoreTimer) clearInterval(scoreTimer);
+  scoreTimer = setInterval(fetchScores, 30 * 1000); // 30s
+}
+
 // ---- INIT ----
 function init() {
   $('week-banner').textContent = `Week 7 — Friday, ${formatFridayDate()}`;
   setupEvents();
   renderAll();
+  startScorePolling();
 }
 
 if (document.readyState === 'loading') {
