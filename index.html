@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friday Night Scoreboard — South Georgia High School Football | riktom.com</title>
+<meta name="description" content="Live scores, kickoff times, weather alerts, and radio links for South Georgia high school football. Built fast for crowded-stadium cell service.">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5J1FM18QT4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-5J1FM18QT4');
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2646745084546998" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- rk-nav:start -->
+<style>
+.rk-nav{background:#1b5e20;padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:52px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;position:sticky;top:0;z-index:1000;box-sizing:border-box;}
+.rk-nav *{box-sizing:border-box;}
+.rk-nav .rk-logo{font-size:1.4rem;font-weight:900;color:#fff;text-decoration:none;letter-spacing:-0.5px;white-space:nowrap;}
+.rk-nav .rk-logo span{color:#a5d6a7;}
+.rk-nav ul{list-style:none;display:flex;align-items:center;gap:.25rem;flex-wrap:wrap;margin:0;padding:0;}
+.rk-nav ul li{margin:0;}
+.rk-nav ul li a{color:#c8e6c9;text-decoration:none;font-size:.9rem;padding:.4rem .6rem;border-radius:6px;white-space:nowrap;transition:background .15s;display:inline-block;}
+.rk-nav ul li a:hover{background:rgba(255,255,255,.12);color:#fff;}
+.rk-dd{position:relative;}
+.rk-dd-menu{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:210px;padding:.4rem 0;z-index:2000;}
+.rk-dd:hover .rk-dd-menu,.rk-dd:focus-within .rk-dd-menu{display:block;}
+.rk-dd-menu a{display:flex!important;align-items:center;gap:.5rem;padding:.55rem 1rem!important;color:#212121!important;font-size:.9rem;background:none!important;border-radius:0!important;}
+.rk-dd-menu a:hover{background:#f5f5f5!important;color:#212121!important;}
+.rk-suggest{color:#fff!important;font-weight:600!important;}
+.rk-home{background:#fff!important;color:#1b5e20!important;font-weight:700!important;padding:.4rem .85rem!important;border-radius:6px!important;}
+.rk-home:hover{background:#e8f5e9!important;color:#1b5e20!important;}
+@media (max-width:700px){.rk-nav ul{gap:.1rem;}.rk-nav ul li a{font-size:.78rem;padding:.3rem .45rem;}.rk-nav .rk-logo{font-size:1.15rem;}.rk-dd-menu{right:auto;left:0;}}
+</style>
+<nav class="rk-nav">
+  <a href="https://riktom.com" class="rk-logo">rik<span>tom</span>.com</a>
+  <ul>
+    <li><a href="https://riktom.com/about.html">About</a></li>
+    <li><a href="https://riktom.com/articles/">Blog</a></li>
+    <li class="rk-dd">
+      <a href="https://riktom.com/#apps">Apps ▾</a>
+      <div class="rk-dd-menu">
+        <a href="https://river.riktom.com"><span>🎣</span> RiverWatch</a>
+        <a href="https://fire.riktom.com"><span>🔥</span> Fire Watcher</a>
+        <a href="https://forecast.riktom.com"><span>🌤️</span> Hunt &amp; Fish Forecast</a>
+        <a href="https://hunt.riktom.com"><span>🦌</span> Hunting Tracker</a>
+        <a href="https://trucks.riktom.com"><span>🚛</span> Truck Finder</a>
+        <a href="https://burn.riktom.com"><span>🔥</span> Burn Permit</a>
+        <a href="https://ramps.riktom.com"><span>⚓</span> Ramp Radar</a>
+        <a href="https://tips.riktom.com"><span>⛺</span> Field Reports</a>
+        <a href="https://deer.riktom.com"><span>🦌</span> Deer Radar</a>
+        <a href="https://dash.riktom.com"><span>🎯</span> Trip Planner</a>
+        <a href="https://sky.riktom.com"><span>🌌</span> Night Sky</a>
+        <a href="https://family.riktom.com"><span>👨‍👩‍👧</span> Family Fun Finder</a>
+        <a href="https://friday.riktom.com"><span>🏈</span> Friday Night Scoreboard</a>
+      </div>
+    </li>
+    <li><a href="https://riktom.com/suggest.html" class="rk-suggest">💡 Suggest an Idea</a></li>
+    <li><a href="https://riktom.com" class="rk-home">🏠 Home</a></li>
+  </ul>
+</nav>
+<!-- rk-nav:end -->
+
+<header class="fns-header">
+  <h1>🏈 Friday Night Scoreboard</h1>
+  <p class="subtitle">South Georgia High School Football — Live</p>
+  <div class="week-banner" id="week-banner">Loading week…</div>
+  <div class="disclaimer">Mock schedule — real GHSA schedule integration coming soon</div>
+
+  <div class="controls">
+    <input type="search" id="search" placeholder="Search by school, mascot, or city…" aria-label="Search schools">
+    <button id="locate-btn" class="btn btn-primary">📍 Find My Location</button>
+  </div>
+
+  <div class="view-toggle">
+    <button data-view="list" class="view-btn active">📋 List</button>
+    <button data-view="map" class="view-btn">🗺️ Map</button>
+  </div>
+</header>
+
+<nav class="filter-bar">
+  <button class="chip active" data-group="all">🏈 All</button>
+  <button class="chip" data-group="big4">🏆 Big 3/4</button>
+  <button class="chip" data-group="region1aa">🌽 Region 1-AA</button>
+  <button class="chip" data-group="inland">🌾 Inland / Albany</button>
+  <button class="chip" data-group="coastal">🌊 Coastal</button>
+  <button class="chip" data-group="neighboring">🌳 Neighboring</button>
+</nav>
+
+<main>
+  <section id="list-view" class="active">
+    <div id="closest-section" class="closest-section" hidden>
+      <h2>📍 Closest to You</h2>
+      <div id="closest-grid" class="card-grid"></div>
+    </div>
+    <h2 id="all-games-title">This Week's Games</h2>
+    <div id="game-grid" class="card-grid"></div>
+    <div id="empty-state" class="empty-state" hidden>No games match your filter.</div>
+  </section>
+
+  <section id="map-view">
+    <div id="map-container"></div>
+    <div class="map-legend">
+      <span class="legend-dot" style="background:#fdb515"></span> Big 3/4
+      <span class="legend-dot" style="background:#c8102e"></span> Region 1-AA
+      <span class="legend-dot" style="background:#3b82f6"></span> Inland
+      <span class="legend-dot" style="background:#14b8a6"></span> Coastal
+      <span class="legend-dot" style="background:#22c55e"></span> Neighboring
+    </div>
+  </section>
+</main>
+
+<footer class="fns-footer">
+  <p>Built fast for stadium cell signal. © riktom.com · Weather alerts via <a href="https://www.weather.gov/" target="_blank" rel="noopener">NWS</a> · Live scores via <a href="https://scorestream.com/" target="_blank" rel="noopener">ScoreStream</a></p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
