@@ -40,6 +40,38 @@
     return resp.json();
   }
 
+  async function fetchLeagueScoreboard(sport, date = new Date()) {
+    const path = SPORT_PATHS[sport];
+    const ymd = formatDateYYYYMMDD(date);
+    const url = `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard?dates=${ymd}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`ESPN ${sport} scoreboard: HTTP ${resp.status}`);
+    return resp.json();
+  }
+
+  function formatDateYYYYMMDD(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}${m}${d}`;
+  }
+
+  function normalizeScore(score) {
+    if (score == null) return '';
+    if (typeof score === 'object') {
+      return score.displayValue ?? score.value ?? '';
+    }
+    return score;
+  }
+
+  function teamLogo(team) {
+    if (!team) return '';
+    if (team.logo) return team.logo;
+    const logos = team.logos || [];
+    const scoreboardLogo = logos.find(l => (l.rel || []).includes('scoreboard')) || logos[0];
+    return scoreboardLogo ? scoreboardLogo.href : '';
+  }
+
   function parseGame(event, ourTeamId) {
     const comp = (event.competitions || [])[0] || {};
     const competitors = comp.competitors || [];
@@ -59,16 +91,16 @@
         id: home.id,
         name: (home.team || {}).displayName || 'TBD',
         abbr: (home.team || {}).abbreviation || '',
-        logo: (home.team || {}).logo || '',
-        score: home.score || '',
+        logo: teamLogo(home.team),
+        score: normalizeScore(home.score),
         winner: home.winner,
       },
       away: {
         id: away.id,
         name: (away.team || {}).displayName || 'TBD',
         abbr: (away.team || {}).abbreviation || '',
-        logo: (away.team || {}).logo || '',
-        score: away.score || '',
+        logo: teamLogo(away.team),
+        score: normalizeScore(away.score),
         winner: away.winner,
       },
       status: status.description || 'Scheduled',
@@ -102,6 +134,33 @@
     result.push(...upcoming.slice(0, 3));
 
     return result;
+  }
+
+  async function eventsForTeam(sport, team) {
+    const schedule = await fetchTeamSchedule(sport, team.slug);
+    const events = schedule.events || [];
+
+    // ESPN's MLB team schedule can mark a game live while leaving scores null.
+    // The daily league scoreboard has the live box score, so overlay today's event.
+    if (sport !== 'mlb') return events;
+
+    try {
+      const scoreboard = await fetchLeagueScoreboard(sport);
+      const liveEvents = (scoreboard.events || []).filter(event => {
+        const comp = (event.competitions || [])[0] || {};
+        return (comp.competitors || []).some(c => {
+          const t = c.team || {};
+          return String(t.id) === String(team.id || team.slug) || t.abbreviation === team.short;
+        });
+      });
+
+      const byId = new Map(events.map(event => [String(event.id), event]));
+      liveEvents.forEach(event => byId.set(String(event.id), event));
+      return Array.from(byId.values());
+    } catch (e) {
+      console.warn(`Failed to load ${sport} scoreboard overlay:`, e);
+      return events;
+    }
   }
 
   function renderGameCard(g, team) {
@@ -163,8 +222,7 @@
       const allCards = [];
       for (const team of teams) {
         try {
-          const data = await fetchTeamSchedule(sport, team.slug);
-          const events = data.events || [];
+          const events = await eventsForTeam(sport, team);
           const relevant = pickRelevantGames(events, team.slug);
           for (const g of relevant) {
             allCards.push({ game: g, team: team });
@@ -182,8 +240,8 @@
       // Sort: live first, then upcoming by date, then most recent final
       allCards.sort((a, b) => {
         const stateOrder = { in: 0, pre: 1, post: 2 };
-        const sa = stateOrder[a.game.state] || 3;
-        const sb = stateOrder[b.game.state] || 3;
+        const sa = stateOrder[a.game.state] ?? 3;
+        const sb = stateOrder[b.game.state] ?? 3;
         if (sa !== sb) return sa - sb;
         return a.game.date - b.game.date;
       });
